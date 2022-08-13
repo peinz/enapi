@@ -58,7 +58,7 @@ export const buildEndpoint = <
 >(implementation: Timp) => ({definition, implementation})
 
 
-type Endpoint<
+export type Endpoint<
   Tdef extends RestEndpointDefinition<any, any, any, any>,
   Timp extends RestEndpointImplementation<Tdef>
 > = {
