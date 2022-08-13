@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-read --allow-net
+#!/usr/bin/env -S deno run --allow-read --allow-net --watch
 
 import { opine } from "https://deno.land/x/opine@2.0.0/mod.ts";
 import { opineCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
