@@ -70,60 +70,44 @@ type Endpoint<
 export type Endpoints = { [key: string]: Endpoint<any, any> };
 
 type APIClient<Tendpoints extends { [key: string]: Endpoint<any, any> }> = {
-	get: {},
-	post: {},
-	entity: {
-    [route in keyof Tendpoints]: {
-      [action in keyof RestEndpointImplementation<Tendpoints[route]['definition']>]: 
-      (...args:
-        Parameters<
-          RestEndpointImplementation<Tendpoints[route]['definition']>[action]
-        >
-      ) => Promise<
-        ReturnType<
-          RestEndpointImplementation<Tendpoints[route]['definition']>[action]
-        >
-      >
-    }
-  } 
+	get: {
+    [route in keyof Tendpoints]: (id: number) => Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']>>
+  },
+	post: {
+    [route in keyof Tendpoints]: (id: number) => Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['post']>>
+  },
+	getCollection: {
+    [route in keyof Tendpoints]: () => Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['getCollection']>>
+  },
 }
 
 export const ApiClient = <Tendpoints extends Endpoints>(endpoints: Tendpoints): APIClient<Tendpoints> => {
-  return {
-    entity: Object.entries(endpoints).reduce( (entityObj, [route, ep]) => {
 
-      Object.entries(ep.definition).forEach( ([action, method]) => {
+  const base = 'http://localhost:3000'
+  const client = {} as APIClient<any>
 
-        entityObj[route] = entityObj[route]||{};
+  const routes = Object.keys(endpoints)
 
-        const base = 'http://localhost:3000'
+  client.get = routes.reduce( (obj, route) => ({
+    [route]: (id: number) => fetch([base, route, id].join('/'), {
+      method: 'GET',
+      mode: 'cors', // no-cors, *cors, same-origin
+      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      redirect: 'follow', // manual, *follow, error
+      referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+      // body: JSON.stringify(data) // body data type must match "Content-Type" header
+    })
+    .then( res => {
+      if(res.status !== 200) throw { status: res.status, statusText: res.statusText};
+      return res.json();
+    })
+    .catch( err => ({err}))
+  }), {} as any)
+  // TODO: implement post, getCollection, ...
 
-        if(action === 'get'){
-          entityObj[route][action] = (id: number) => fetch([base, route, id].join('/'), {
-            method: 'GET',
-            mode: 'cors', // no-cors, *cors, same-origin
-            cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-            credentials: 'include', // include, *same-origin, omit
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            redirect: 'follow', // manual, *follow, error
-            referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-            // body: JSON.stringify(data) // body data type must match "Content-Type" header
-          })
-          .then( res => {
-            if(res.status !== 200) throw { status: res.status, statusText: res.statusText};
-            return res.json();
-          })
-          .catch( err => ({err}))
-        }
-
-
-        // TODO: implement post, getCollection, ...
-
-      })
-
-      return entityObj;
-    }, {} as Record<string, any>),
-  } as any
+  return client;
 }

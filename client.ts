@@ -5,6 +5,6 @@ import { ApiClient } from "./api-lib.ts";
 
 
 const client = ApiClient(endpoints)
-const res = await client.entity.paarung.get(7)
+const res = await client.get.detail(5);
 
 console.log(res);
