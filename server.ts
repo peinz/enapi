@@ -17,7 +17,8 @@ Object.entries(endpoints).forEach( ([route, ep]: [string, Endpoint<any, any>]) =
     app.get(`/${route}/:id`, (req, res) => {
       const id = parseInt(req.params.id);
       const result = ep.implementation.get(id);
-      res.json(result);
+      if(result) res.json(result);
+      else res.setStatus(404).json({err: 'not found'})
     });
 
   if(ep.implementation.post)
