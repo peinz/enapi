@@ -7,7 +7,8 @@ import { ApiClient } from "./api-lib.ts";
 const client = ApiClient(endpoints)
 
 // client.post.detail({name: 'abc'}) // FIXME: should not work details/post does not exist
-client.post.paarung({id: 0, name: 'dfg'}) // TODO: number should not be there
+const posted_data = await client.post.paarung({id: 0, name: 'dfg'}) // TODO: number should not be there
+console.log('posted_data', posted_data)
 
 const details = await client.getCollection.detail({season: 99});
 

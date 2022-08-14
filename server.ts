@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-read --allow-net --watch
 
-import { opine } from "https://deno.land/x/opine@2.0.0/mod.ts";
+import { opine, json } from "https://deno.land/x/opine@2.0.0/mod.ts";
 import { opineCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
 import { endpoints } from "./api.ts";
 import { createOpenApiJsonDoc } from "./open-api-docs.ts";
@@ -9,6 +9,7 @@ import { Endpoint } from "./api-lib.ts";
 
 const app = opine();
 app.use(opineCors());
+app.use(json());
 
 Object.entries(endpoints).forEach( ([route, ep]: [string, Endpoint<any, any>]) => {
 
@@ -27,11 +28,9 @@ Object.entries(endpoints).forEach( ([route, ep]: [string, Endpoint<any, any>]) =
     });
 
   if(ep.implementation.post)
-    app.post(`/${route}/:id`, (req, res) => {
-      const id = parseInt(req.params.id);
-      const body = req.body;
-      ep.implementation.post(id, body);
-      const result = ep.implementation.get(id);
+    app.post(`/${route}`, (req, res) => {
+      const body = req.parsedBody;
+      const result = ep.implementation.post(body);
       res.json(result);
     });
 

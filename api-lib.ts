@@ -45,7 +45,7 @@ export type RestEndpointImplementation<
   [key in keyof Tdefinition]: key extends 'get'
     ? (id: number) => MapSupportedTypeToInternType<Tdefinition[key]['result']>
     : key extends 'post'
-      ? (id: number, body: MapSupportedTypeToInternType<Tdefinition[key]['body']>) => void 
+      ? (body: MapSupportedTypeToInternType<Tdefinition[key]['body']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']> 
       : key extends 'getCollection'
         ? (queryParams: MapSupportedTypeToInternType<Tdefinition[key]['queryParams']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']>[] 
         : never
@@ -71,10 +71,12 @@ export type Endpoints = { [key: string]: Endpoint<any, any> };
 
 type APIClient<Tendpoints extends { [key: string]: Endpoint<any, any> }> = {
 	get: {
-    [route in keyof Tendpoints]: (id: number) => Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>>
+    [route in keyof Tendpoints]: (id: number)
+      => Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>>
   },
 	post: {
-    [route in keyof Tendpoints]: (body: MapSupportedTypeToInternType<Tendpoints[route]['definition']['post']['body']>) => Promise<void>
+    [route in keyof Tendpoints]: (body: MapSupportedTypeToInternType<Tendpoints[route]['definition']['post']['body']>) =>
+      Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>>
   },
 	getCollection: {
     [route in keyof Tendpoints]: (params: MapSupportedTypeToInternType<Tendpoints[route]['definition']['getCollection']['queryParams']>) => 
@@ -90,6 +92,7 @@ export const ApiClient = <Tendpoints extends Endpoints>(endpoints: Tendpoints): 
   const routes = Object.keys(endpoints)
 
   client.get = routes.reduce( (obj, route) => ({
+    ...obj,
     [route]: (id: number) => fetch([base, route, id].join('/'), {
       method: 'GET',
       mode: 'cors', // no-cors, *cors, same-origin
@@ -108,7 +111,29 @@ export const ApiClient = <Tendpoints extends Endpoints>(endpoints: Tendpoints): 
     })
     .catch( err => ({err}))
   }), {} as any)
-  // TODO: implement post, getCollection, ...
+
+  client.post = routes.reduce( (obj, route) => ({
+    ...obj,
+    [route]: (body: Record<string, any>) => fetch([base, route].join('/'), {
+      method: 'POST',
+      mode: 'cors', // no-cors, *cors, same-origin
+      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      referrerPolicy: 'no-referrer',
+      body: JSON.stringify(body)
+    })
+    .then( res => {
+      console.log(res)
+      if(res.status !== 200) throw { status: res.status, statusText: res.statusText};
+      return res.json();
+    })
+    .catch( err => ({err}))
+  }), {} as any)
+
+  // TODO: implement getCollection, ...
 
   return client;
 }

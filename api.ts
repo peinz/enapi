@@ -40,10 +40,13 @@ const details_endpnt_def = EndpDef({
   },
 })
 
+let pc = 0
+const paarungen = {} as Record<number, {id: number, name: string}>
+
 const paarung_endpnt_impl: RestEndpointImplementation<typeof paarung_endpnt_def> = {
-  get: (id) => ({id: id, name: 'avc'+id }),
-  post: (id, body) => console.log('post implementation executed', id, body),
-  getCollection: (queryParams) => ([{id: 7, name: 'avc'+queryParams.season }]),
+  get: (id) => paarungen[id],
+  post: (body) => paarungen[++pc] = {...body, id: pc},
+  getCollection: (queryParams) => Object.values(paarungen),
 }
 
 const details_endpnt_impl: RestEndpointImplementation<typeof details_endpnt_def> = {
