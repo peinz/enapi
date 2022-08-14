@@ -95,15 +95,14 @@ export const ApiClient = <Tendpoints extends Endpoints>(endpoints: Tendpoints): 
     ...obj,
     [route]: (id: number) => fetch([base, route, id].join('/'), {
       method: 'GET',
-      mode: 'cors', // no-cors, *cors, same-origin
-      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-      credentials: 'include', // include, *same-origin, omit
+      mode: 'cors',
+      cache: 'no-cache',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
       },
-      redirect: 'follow', // manual, *follow, error
-      referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-      // body: JSON.stringify(data) // body data type must match "Content-Type" header
+      redirect: 'follow',
+      referrerPolicy: 'no-referrer',
     })
     .then( res => {
       if(res.status !== 200) throw { status: res.status, statusText: res.statusText};
@@ -116,9 +115,9 @@ export const ApiClient = <Tendpoints extends Endpoints>(endpoints: Tendpoints): 
     ...obj,
     [route]: (body: Record<string, any>) => fetch([base, route].join('/'), {
       method: 'POST',
-      mode: 'cors', // no-cors, *cors, same-origin
-      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-      credentials: 'include', // include, *same-origin, omit
+      mode: 'cors',
+      cache: 'no-cache',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
       },
@@ -126,14 +125,38 @@ export const ApiClient = <Tendpoints extends Endpoints>(endpoints: Tendpoints): 
       body: JSON.stringify(body)
     })
     .then( res => {
-      console.log(res)
       if(res.status !== 200) throw { status: res.status, statusText: res.statusText};
       return res.json();
     })
     .catch( err => ({err}))
   }), {} as any)
 
-  // TODO: implement getCollection, ...
+
+  const getUrl = (baseUrl: string, params: Record<string, string>) => {
+    const url = new URL(baseUrl)
+    url.search = new URLSearchParams(params).toString();
+    return url
+  }
+
+  client.getCollection = routes.reduce( (obj, route) => ({
+    ...obj,
+    [route]: (queryParams: Record<string, string>) => fetch(getUrl([base, route].join('/'), queryParams), {
+      method: 'GET',
+      mode: 'cors',
+      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      redirect: 'follow',
+      referrerPolicy: 'no-referrer',
+    })
+    .then( res => {
+      if(res.status !== 200) throw { status: res.status, statusText: res.statusText};
+      return res.json();
+    })
+    .catch( err => ({err}))
+  }), {} as any)
 
   return client;
 }
