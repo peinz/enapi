@@ -14,9 +14,10 @@ const apiTypeDefToOpenApiTypeDef = (apiTypeDef: Record<string, string>) => {
 export const createOpenApiJsonDoc = (endpoints: Endpoints) => {
 
   const schemas = {} as any;
-  const getSchemaRef = (name: string, propDef: any) => {
-    const refId = '#/components/schemas/' + name;
-    schemas[name] = {
+  const getSchemaRef = (route: string, action: string, propDef: any) => {
+    const schema_name = route + '_' + action
+    const refId = '#/components/schemas/' + schema_name
+    schemas[schema_name] = {
       // required: [],
       type: "object",
       properties: apiTypeDefToOpenApiTypeDef(propDef),
@@ -27,17 +28,18 @@ export const createOpenApiJsonDoc = (endpoints: Endpoints) => {
 
   const paths = Object.entries(endpoints).reduce( (pathObj, [path, ep]) => {
 
-    const pathActionObj = {} as any;
+    const pathEntityActionObj = {} as any;
+    const pathCollectionActionObj = {} as any;
 
-    pathActionObj.get = {
+    pathEntityActionObj.get = {
       tags: [ path ],
-      summary: `get ${path} resource`,
-      description: "Update an existing pet by Id",
+      summary: `get ${path} entity`,
+      description: `get ${path} entity`,
       operationId: 'get' + path,
       parameters: [{
         name: 'id',
         in: 'path',
-        description: 'resource identifier',
+        description: 'entity identifier',
         required: true,
         schema: {
           type: 'integer',
@@ -50,7 +52,7 @@ export const createOpenApiJsonDoc = (endpoints: Endpoints) => {
           content: {
             "application/json": {
               "schema": {
-                "$ref": getSchemaRef(path, ep.definition.getResult),
+                "$ref": getSchemaRef(path, 'get', ep.definition.getResult),
               }
             },
           }
@@ -64,7 +66,41 @@ export const createOpenApiJsonDoc = (endpoints: Endpoints) => {
       }
     };
 
-    pathObj['/' + path + '/{id}'] = pathActionObj;
+    if(ep.definition.postBody) pathCollectionActionObj.post = {
+      tags: [ path ],
+      summary: `create ${path} entity`,
+      description: `create ${path} entity`,
+      operationId: 'post' + path,
+      requestBody: {
+        description: `create ${path} entity`,
+        content: {
+          "application/json": {
+            schema: {
+              "$ref": getSchemaRef(path, 'post', ep.definition.postBody),
+            }
+          },
+        },
+        required: true
+      },
+      responses: {
+        "201": {
+          description: "Entity created",
+          content: {
+            "application/json": {
+              "schema": {
+                "$ref": getSchemaRef(path, 'get', ep.definition.getResult),
+              }
+            },
+          }
+        },
+        "400": {
+          description: "invalid request"
+        },
+      }
+    }
+
+    pathObj['/' + path + '/{id}'] = pathEntityActionObj;
+    pathObj['/' + path] = pathCollectionActionObj;
     return pathObj;
   }, {} as any)
 
