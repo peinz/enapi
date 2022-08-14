@@ -6,7 +6,6 @@ const paarung_endpnt_def = EndpDef({
     name: 'string',
   },
   postBody: {
-    id: 'number',
     name: 'string',
   },
   patchBody: {
