@@ -26,46 +26,43 @@ export const createOpenApiJsonDoc = (endpoints: Endpoints) => {
   }
 
   const paths = Object.entries(endpoints).reduce( (pathObj, [path, ep]) => {
-    const action = 'get';
 
     const pathActionObj = {} as any;
 
-    if(action === 'get'){
-      pathActionObj.get = {
-        tags: [ path ],
-        summary: `${action} ${path} resource`,
-        description: "Update an existing pet by Id",
-        operationId: action+path,
-        parameters: [{
-          name: 'id',
-          in: 'path',
-          description: 'resource identifier',
-          required: true,
-          schema: {
-            type: 'integer',
-            format: 'int64',
-          },
-        }],
-        responses: {
-          "200": {
-            description: "Successful operation",
-            content: {
-              "application/json": {
-                "schema": {
-                  "$ref": getSchemaRef(path, ep.definition.get.result),
-                }
-              },
-            }
-          },
-          "400": {
-            description: "invalid request"
-          },
-          "404": {
-            description: "not found"
-          },
-        }
-      };
-    }
+    pathActionObj.get = {
+      tags: [ path ],
+      summary: `get ${path} resource`,
+      description: "Update an existing pet by Id",
+      operationId: 'get' + path,
+      parameters: [{
+        name: 'id',
+        in: 'path',
+        description: 'resource identifier',
+        required: true,
+        schema: {
+          type: 'integer',
+          format: 'int64',
+        },
+      }],
+      responses: {
+        "200": {
+          description: "Successful operation",
+          content: {
+            "application/json": {
+              "schema": {
+                "$ref": getSchemaRef(path, ep.definition.getResult),
+              }
+            },
+          }
+        },
+        "400": {
+          description: "invalid request"
+        },
+        "404": {
+          description: "not found"
+        },
+      }
+    };
 
     pathObj['/' + path + '/{id}'] = pathActionObj;
     return pathObj;

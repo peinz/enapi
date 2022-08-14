@@ -4,6 +4,10 @@ type GetDefinedKeys<Tobj extends Record<string, any>> = {
   [key in keyof Tobj]: Tobj[key] extends undefined ? never : key
 }[keyof Tobj]
 
+type FilterOutNeverProperties<Tobj extends Record<string, any>> = {
+  [key in GetDefinedKeys<Tobj>]: Tobj[key]
+}
+
 type SupportedApiType = 'string'|'number'
 type SupportedTypeToInternType<Ttype extends SupportedApiType> = Ttype extends 'string' 
   ? string
@@ -16,50 +20,52 @@ type MapSupportedTypeToInternType<TtypeDict extends {[key: string]: SupportedApi
 }
 
 export type RestEndpointDefinition<
-  TgetResult extends Record<string, SupportedApiType>|undefined,
+  TgetResult extends Record<string, SupportedApiType>,
   TpostBody extends Record<string, SupportedApiType>|undefined,
   TpatchBody extends Record<string, SupportedApiType>|undefined,
   TgetCollectionQueryParams extends Record<string, SupportedApiType>|undefined,
-  Tactions extends Partial<{
-    get: { result: TgetResult },
-    post: { body: TpostBody },
-    patch: { body: TpatchBody },
-    delete: {},
-    getCollection: { queryParams: TgetCollectionQueryParams },
-  }>,
+  Tactions extends {
+    getResult: TgetResult,
+    postBody?: TpostBody,
+    patchBody?: TpatchBody,
+    remove?: boolean,
+    collectionQueryParams?: TgetCollectionQueryParams,
+  },
 > = { [key in GetDefinedKeys<Tactions>]: Tactions[key] }
 
 export const EndpDef = <
-  TgetResult extends Record<string, SupportedApiType>|undefined,
+  TgetResult extends Record<string, SupportedApiType>,
   TpostBody extends Record<string, SupportedApiType>|undefined,
   TpatchBody extends Record<string, SupportedApiType>|undefined,
   TgetCollectionQueryParams extends Record<string, SupportedApiType>|undefined,
-  Tactions extends Partial<{
-    get: { result: TgetResult },
-    post: { body: TpostBody },
-    patch: { body: TpatchBody },
-    delete: {},
-    getCollection: { queryParams: TgetCollectionQueryParams },
-  }>,
+  Tactions extends {
+    getResult: TgetResult,
+    postBody?: TpostBody,
+    patchBody?: TpatchBody,
+    remove?: boolean,
+    collectionQueryParams?: TgetCollectionQueryParams,
+  },
 >(epc: Tactions): RestEndpointDefinition<TgetResult, TpostBody, TpatchBody, TgetCollectionQueryParams, Tactions> => {
   return epc;
 }
 
 export type RestEndpointImplementation<
   Tdefinition extends RestEndpointDefinition<any, any, any, any, any>,
-> = {
-  [key in keyof Tdefinition]: key extends 'get'
-    ? (id: number) => MapSupportedTypeToInternType<Tdefinition[key]['result']>
-    : key extends 'post'
-      ? (body: MapSupportedTypeToInternType<Tdefinition[key]['body']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']> 
-      : key extends 'patch'
-        ? (id: number, body: MapSupportedTypeToInternType<Tdefinition[key]['body']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']> 
-        : key extends 'delete'
-          ? (id: number) => void
-          : key extends 'getCollection'
-            ? (queryParams: MapSupportedTypeToInternType<Tdefinition[key]['queryParams']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']>[] 
-            : never
-};
+> = FilterOutNeverProperties<{
+  get: (id: number) => MapSupportedTypeToInternType<Tdefinition['getResult']>
+  post: 'postBody' extends (keyof Tdefinition)
+    ? (body: MapSupportedTypeToInternType<Tdefinition['postBody']>) => MapSupportedTypeToInternType<Tdefinition['getResult']>
+    : never
+  patch: 'patchBody' extends (keyof Tdefinition)
+    ? (id: number, body: MapSupportedTypeToInternType<Tdefinition['patchBody']>) => MapSupportedTypeToInternType<Tdefinition['getResult']>
+    : never
+  delete: 'remove' extends (keyof Tdefinition)
+    ? (id: number) => void
+    : never
+  getCollection: 'collectionQueryParams' extends (keyof Tdefinition)
+    ? (queryParams: MapSupportedTypeToInternType<Tdefinition['collectionQueryParams']>) => MapSupportedTypeToInternType<Tdefinition['getResult']>[]
+    : never
+}>
 
 export const buildEndpoint = <
   Tdef extends RestEndpointDefinition<any, any, any, any, any>,
@@ -82,23 +88,23 @@ export type Endpoints = { [key: string]: Endpoint<any, any> };
 type APIClient<Tendpoints extends { [key: string]: Endpoint<any, any> }> = {
 	get: {
     [route in keyof Tendpoints]: (id: number)
-      => Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>>
+      => Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['getResult']>>
   },
 	post: {
-    [route in keyof Tendpoints]: (body: MapSupportedTypeToInternType<Tendpoints[route]['definition']['post']['body']>) =>
-      Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>>
+    [route in keyof Tendpoints]: (body: MapSupportedTypeToInternType<Tendpoints[route]['definition']['postBody']>) =>
+      Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['getResult']>>
   },
 	patch: {
-    [route in keyof Tendpoints]: (id: number, body: MapSupportedTypeToInternType<Tendpoints[route]['definition']['patch']['body']>) =>
-      Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>>
+    [route in keyof Tendpoints]: (id: number, body: MapSupportedTypeToInternType<Tendpoints[route]['definition']['patchBody']>) =>
+      Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['getResult']>>
   },
 	delete: {
     [route in keyof Tendpoints]: (id: number) =>
       Promise<void>
   },
 	getCollection: {
-    [route in keyof Tendpoints]: (params: MapSupportedTypeToInternType<Tendpoints[route]['definition']['getCollection']['queryParams']>) => 
-      Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>[]>
+    [route in keyof Tendpoints]: (params: MapSupportedTypeToInternType<Tendpoints[route]['definition']['collectionQueryParams']>) => 
+      Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['getResult']>[]>
   },
 }
 

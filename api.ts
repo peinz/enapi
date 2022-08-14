@@ -1,42 +1,29 @@
 import { buildEndpoint, EndpDef, RestEndpointImplementation } from "./api-lib.ts";
 
 const paarung_endpnt_def = EndpDef({
-  get: {
-    result: {
-      id: 'number',
-      name: 'string',
-    },
+  getResult: {
+    id: 'number',
+    name: 'string',
   },
-  post: {
-    body: {
-      id: 'number',
-      name: 'string',
-    },
+  postBody: {
+    id: 'number',
+    name: 'string',
   },
-  patch: {
-    body: {
-      name: 'string',
-    }
+  patchBody: {
+    name: 'string',
   },
-  getCollection: {
-    queryParams: {
-      season: 'number',
-    },
+  collectionQueryParams: {
+    season: 'number',
   },
-  delete: {},
+  remove: true,
 })
 
 const details_endpnt_def = EndpDef({
-  get: {
-    result: {
-      id: 'number',
-      name: 'string',
-    },
+  getResult: {
+    name: 'string',
   },
-  getCollection: {
-    queryParams: {
-      season: 'number',
-    },
+  collectionQueryParams: {
+    season: 'number',
   },
 })
 
