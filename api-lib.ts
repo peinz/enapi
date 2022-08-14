@@ -71,13 +71,14 @@ export type Endpoints = { [key: string]: Endpoint<any, any> };
 
 type APIClient<Tendpoints extends { [key: string]: Endpoint<any, any> }> = {
 	get: {
-    [route in keyof Tendpoints]: (id: number) => Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']>>
+    [route in keyof Tendpoints]: (id: number) => Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>>
   },
 	post: {
-    [route in keyof Tendpoints]: (id: number) => Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['post']>>
+    [route in keyof Tendpoints]: (body: MapSupportedTypeToInternType<Tendpoints[route]['definition']['post']['body']>) => Promise<void>
   },
 	getCollection: {
-    [route in keyof Tendpoints]: () => Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['getCollection']>>
+    [route in keyof Tendpoints]: (params: MapSupportedTypeToInternType<Tendpoints[route]['definition']['getCollection']['queryParams']>) => 
+      Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>[]>
   },
 }
 
