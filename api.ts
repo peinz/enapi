@@ -13,9 +13,11 @@ const paarung_endpnt_def = EndpDef({
       name: 'string',
     },
   },
-  // patch: {
-  //   id: 'number',
-  // },
+  patch: {
+    body: {
+      name: 'string',
+    }
+  },
   getCollection: {
     queryParams: {
       season: 'number',
@@ -46,6 +48,7 @@ const paarungen = {} as Record<number, {id: number, name: string}>
 const paarung_endpnt_impl: RestEndpointImplementation<typeof paarung_endpnt_def> = {
   get: (id) => paarungen[id],
   post: (body) => paarungen[++pc] = {...body, id: pc},
+  patch: (id, body) => paarungen[id] = {...paarungen[id], ...body},
   getCollection: (queryParams) => Object.values(paarungen),
 }
 

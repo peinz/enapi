@@ -13,13 +13,6 @@ app.use(json());
 
 Object.entries(endpoints).forEach( ([route, ep]: [string, Endpoint<any, any>]) => {
 
-  if(ep.implementation.getCollection)
-    app.get(`/${route}`, (req, res) => {
-      const queryParams = req.query;
-      const result = ep.implementation.getCollection(queryParams)
-      res.json(result);
-    });
-
   if(ep.implementation.get)
     app.get(`/${route}/:id`, (req, res) => {
       const id = parseInt(req.params.id);
@@ -31,6 +24,21 @@ Object.entries(endpoints).forEach( ([route, ep]: [string, Endpoint<any, any>]) =
     app.post(`/${route}`, (req, res) => {
       const body = req.parsedBody;
       const result = ep.implementation.post(body);
+      res.json(result);
+    });
+
+  if(ep.implementation.patch)
+    app.patch(`/${route}/:id`, (req, res) => {
+      const id = parseInt(req.params.id);
+      const body = req.parsedBody;
+      const result = ep.implementation.patch(id, body);
+      res.json(result);
+    });
+
+  if(ep.implementation.getCollection)
+    app.get(`/${route}`, (req, res) => {
+      const queryParams = req.query;
+      const result = ep.implementation.getCollection(queryParams)
       res.json(result);
     });
 

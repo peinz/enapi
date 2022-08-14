@@ -15,6 +15,10 @@ const paarungen = await client.getCollection.paarung({season: 99});
 console.log('paarungen', paarungen)
 
 const last_detail = paarungen[paarungen.length-1]
-const last_detail_again = await client.get.detail(last_detail.id);
+
+await client.patch.paarung(last_detail.id, { name: 'neu' })
+
+
+const last_detail_again = await client.get.paarung(last_detail.id);
 
 console.log(last_detail_again);

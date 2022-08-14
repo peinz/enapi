@@ -18,10 +18,12 @@ type MapSupportedTypeToInternType<TtypeDict extends {[key: string]: SupportedApi
 export type RestEndpointDefinition<
   TgetResult extends Record<string, SupportedApiType>|undefined,
   TpostBody extends Record<string, SupportedApiType>|undefined,
+  TpatchBody extends Record<string, SupportedApiType>|undefined,
   TgetCollectionQueryParams extends Record<string, SupportedApiType>|undefined,
   Tactions extends Partial<{
     get: { result: TgetResult },
     post: { body: TpostBody },
+    patch: { body: TpatchBody },
     getCollection: { queryParams: TgetCollectionQueryParams },
   }>,
 > = { [key in GetDefinedKeys<Tactions>]: Tactions[key] }
@@ -29,37 +31,41 @@ export type RestEndpointDefinition<
 export const EndpDef = <
   TgetResult extends Record<string, SupportedApiType>|undefined,
   TpostBody extends Record<string, SupportedApiType>|undefined,
+  TpatchBody extends Record<string, SupportedApiType>|undefined,
   TgetCollectionQueryParams extends Record<string, SupportedApiType>|undefined,
   Tactions extends Partial<{
     get: { result: TgetResult },
     post: { body: TpostBody },
+    patch: { body: TpatchBody },
     getCollection: { queryParams: TgetCollectionQueryParams },
   }>,
->(epc: Tactions): RestEndpointDefinition<TgetResult, TpostBody, TgetCollectionQueryParams, Tactions> => {
+>(epc: Tactions): RestEndpointDefinition<TgetResult, TpostBody, TpatchBody, TgetCollectionQueryParams, Tactions> => {
   return epc;
 }
 
 export type RestEndpointImplementation<
-  Tdefinition extends RestEndpointDefinition<any, any, any, any>,
+  Tdefinition extends RestEndpointDefinition<any, any, any, any, any>,
 > = {
   [key in keyof Tdefinition]: key extends 'get'
     ? (id: number) => MapSupportedTypeToInternType<Tdefinition[key]['result']>
     : key extends 'post'
       ? (body: MapSupportedTypeToInternType<Tdefinition[key]['body']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']> 
-      : key extends 'getCollection'
-        ? (queryParams: MapSupportedTypeToInternType<Tdefinition[key]['queryParams']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']>[] 
-        : never
+      : key extends 'patch'
+        ? (id: number, body: MapSupportedTypeToInternType<Tdefinition[key]['body']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']> 
+        : key extends 'getCollection'
+          ? (queryParams: MapSupportedTypeToInternType<Tdefinition[key]['queryParams']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']>[] 
+          : never
 };
 
 export const buildEndpoint = <
-  Tdef extends RestEndpointDefinition<any, any, any, any>,
+  Tdef extends RestEndpointDefinition<any, any, any, any, any>,
 >(definition: Tdef) => <
   Timp extends RestEndpointImplementation<Tdef>
 >(implementation: Timp) => ({definition, implementation})
 
 
 export type Endpoint<
-  Tdef extends RestEndpointDefinition<any, any, any, any>,
+  Tdef extends RestEndpointDefinition<any, any, any, any, any>,
   Timp extends RestEndpointImplementation<Tdef>
 > = {
   definition: Tdef,
@@ -76,6 +82,10 @@ type APIClient<Tendpoints extends { [key: string]: Endpoint<any, any> }> = {
   },
 	post: {
     [route in keyof Tendpoints]: (body: MapSupportedTypeToInternType<Tendpoints[route]['definition']['post']['body']>) =>
+      Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>>
+  },
+	patch: {
+    [route in keyof Tendpoints]: (id: number, body: MapSupportedTypeToInternType<Tendpoints[route]['definition']['patch']['body']>) =>
       Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>>
   },
 	getCollection: {
@@ -131,6 +141,25 @@ export const ApiClient = <Tendpoints extends Endpoints>(endpoints: Tendpoints): 
     .catch( err => ({err}))
   }), {} as any)
 
+  client.patch = routes.reduce( (obj, route) => ({
+    ...obj,
+    [route]: (id: number, body: Record<string, any>) => fetch([base, route, id].join('/'), {
+      method: 'PATCH',
+      mode: 'cors',
+      cache: 'no-cache',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      referrerPolicy: 'no-referrer',
+      body: JSON.stringify(body)
+    })
+    .then( res => {
+      if(res.status !== 200) throw { status: res.status, statusText: res.statusText};
+      return res.json();
+    })
+    .catch( err => ({err}))
+  }), {} as any)
 
   const getUrl = (baseUrl: string, params: Record<string, string>) => {
     const url = new URL(baseUrl)
