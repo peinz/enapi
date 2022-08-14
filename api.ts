@@ -23,9 +23,7 @@ const paarung_endpnt_def = EndpDef({
       season: 'number',
     },
   },
-  // postCollection: {
-  //   id: 'number',
-  // },
+  delete: {},
 })
 
 const details_endpnt_def = EndpDef({
@@ -49,6 +47,7 @@ const paarung_endpnt_impl: RestEndpointImplementation<typeof paarung_endpnt_def>
   get: (id) => paarungen[id],
   post: (body) => paarungen[++pc] = {...body, id: pc},
   patch: (id, body) => paarungen[id] = {...paarungen[id], ...body},
+  delete: (id) => delete paarungen[id],
   getCollection: (queryParams) => Object.values(paarungen),
 }
 

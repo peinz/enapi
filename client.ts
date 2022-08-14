@@ -10,6 +10,9 @@ const client = ApiClient(endpoints)
 const posted_data = await client.post.paarung({id: 0, name: 'dfg'}) // TODO: number should not be there
 console.log('posted_data', posted_data)
 
+const posted_data_2 = await client.post.paarung({id: 0, name: 'nnn'})
+await client.delete.paarung(posted_data_2.id)
+
 const paarungen = await client.getCollection.paarung({season: 99});
 
 console.log('paarungen', paarungen)

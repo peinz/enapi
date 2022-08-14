@@ -24,6 +24,7 @@ export type RestEndpointDefinition<
     get: { result: TgetResult },
     post: { body: TpostBody },
     patch: { body: TpatchBody },
+    delete: {},
     getCollection: { queryParams: TgetCollectionQueryParams },
   }>,
 > = { [key in GetDefinedKeys<Tactions>]: Tactions[key] }
@@ -37,6 +38,7 @@ export const EndpDef = <
     get: { result: TgetResult },
     post: { body: TpostBody },
     patch: { body: TpatchBody },
+    delete: {},
     getCollection: { queryParams: TgetCollectionQueryParams },
   }>,
 >(epc: Tactions): RestEndpointDefinition<TgetResult, TpostBody, TpatchBody, TgetCollectionQueryParams, Tactions> => {
@@ -52,9 +54,11 @@ export type RestEndpointImplementation<
       ? (body: MapSupportedTypeToInternType<Tdefinition[key]['body']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']> 
       : key extends 'patch'
         ? (id: number, body: MapSupportedTypeToInternType<Tdefinition[key]['body']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']> 
-        : key extends 'getCollection'
-          ? (queryParams: MapSupportedTypeToInternType<Tdefinition[key]['queryParams']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']>[] 
-          : never
+        : key extends 'delete'
+          ? (id: number) => void
+          : key extends 'getCollection'
+            ? (queryParams: MapSupportedTypeToInternType<Tdefinition[key]['queryParams']>) => MapSupportedTypeToInternType<Tdefinition['get']['result']>[] 
+            : never
 };
 
 export const buildEndpoint = <
@@ -87,6 +91,10 @@ type APIClient<Tendpoints extends { [key: string]: Endpoint<any, any> }> = {
 	patch: {
     [route in keyof Tendpoints]: (id: number, body: MapSupportedTypeToInternType<Tendpoints[route]['definition']['patch']['body']>) =>
       Promise<MapSupportedTypeToInternType<Tendpoints[route]['definition']['get']['result']>>
+  },
+	delete: {
+    [route in keyof Tendpoints]: (id: number) =>
+      Promise<void>
   },
 	getCollection: {
     [route in keyof Tendpoints]: (params: MapSupportedTypeToInternType<Tendpoints[route]['definition']['getCollection']['queryParams']>) => 
@@ -157,6 +165,21 @@ export const ApiClient = <Tendpoints extends Endpoints>(endpoints: Tendpoints): 
     .then( res => {
       if(res.status !== 200) throw { status: res.status, statusText: res.statusText};
       return res.json();
+    })
+    .catch( err => ({err}))
+  }), {} as any)
+
+  client.delete = routes.reduce( (obj, route) => ({
+    ...obj,
+    [route]: (id: number) => fetch([base, route, id].join('/'), {
+      method: 'DELETE',
+      mode: 'cors',
+      cache: 'no-cache',
+      credentials: 'include',
+      referrerPolicy: 'no-referrer',
+    })
+    .then( res => {
+      if(res.status !== 200) throw { status: res.status, statusText: res.statusText};
     })
     .catch( err => ({err}))
   }), {} as any)

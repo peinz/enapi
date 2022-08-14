@@ -35,6 +35,13 @@ Object.entries(endpoints).forEach( ([route, ep]: [string, Endpoint<any, any>]) =
       res.json(result);
     });
 
+  if(ep.implementation.delete)
+    app.delete(`/${route}/:id`, (req, res) => {
+      const id = parseInt(req.params.id);
+      ep.implementation.delete(id);
+      res.end()
+    });
+
   if(ep.implementation.getCollection)
     app.get(`/${route}`, (req, res) => {
       const queryParams = req.query;
