@@ -25,7 +25,7 @@ Object.entries(endpoints).forEach( ([route, ep]: [string, Endpoint<any, any>]) =
     app.post(`/${route}`, (req, res) => {
       const body = req.parsedBody;
       const result = ep.implementation.post(body);
-      res.json(result);
+      res.setStatus(201).json(result);
     });
 
   if(ep.implementation.patch)
@@ -40,7 +40,7 @@ Object.entries(endpoints).forEach( ([route, ep]: [string, Endpoint<any, any>]) =
     app.delete(`/${route}/:id`, (req, res) => {
       const id = parseInt(req.params.id);
       ep.implementation.delete(id);
-      res.end()
+      res.setStatus(204).end()
     });
 
   if(ep.implementation.getCollection)

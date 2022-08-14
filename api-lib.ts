@@ -149,7 +149,7 @@ export const ApiClient = <Tendpoints extends Endpoints>(endpoints: Tendpoints): 
       body: JSON.stringify(body)
     })
     .then( res => {
-      if(res.status !== 200) throw { status: res.status, statusText: res.statusText};
+      if(res.status !== 201) throw { status: res.status, statusText: res.statusText};
       return res.json();
     })
     .catch( err => ({err}))
@@ -185,7 +185,7 @@ export const ApiClient = <Tendpoints extends Endpoints>(endpoints: Tendpoints): 
       referrerPolicy: 'no-referrer',
     })
     .then( res => {
-      if(res.status !== 200) throw { status: res.status, statusText: res.statusText};
+      if(res.status !== 204) throw { status: res.status, statusText: res.statusText};
     })
     .catch( err => ({err}))
   }), {} as any)
