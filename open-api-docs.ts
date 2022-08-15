@@ -99,6 +99,112 @@ export const createOpenApiJsonDoc = (endpoints: Endpoints) => {
       }
     }
 
+    if(ep.definition.patchBody) pathEntityActionObj.patch = {
+      tags: [ path ],
+      summary: `update ${path} entity`,
+      description: `update ${path} entity`,
+      operationId: 'patch' + path,
+      parameters: [{
+        name: 'id',
+        in: 'path',
+        description: 'entity identifier',
+        required: true,
+        schema: {
+          type: 'integer',
+          format: 'int64',
+        },
+      }],
+      requestBody: {
+        description: `create ${path} entity`,
+        content: {
+          "application/json": {
+            schema: {
+              "$ref": getSchemaRef(path, 'patch', ep.definition.patchBody),
+            }
+          },
+        },
+        required: false
+      },
+      responses: {
+        "200": {
+          description: "Entity updated",
+          content: {
+            "application/json": {
+              "schema": {
+                "$ref": getSchemaRef(path, 'get', ep.definition.getResult),
+              }
+            },
+          }
+        },
+        "400": {
+          description: "invalid request"
+        },
+      }
+    }
+
+    if(ep.definition.remove) pathEntityActionObj.delete = {
+      tags: [ path ],
+      summary: `delete ${path} entity`,
+      description: `delete${path} entity`,
+      operationId: 'delete' + path,
+      parameters: [{
+        name: 'id',
+        in: 'path',
+        description: 'entity identifier',
+        required: true,
+        schema: {
+          type: 'integer',
+          format: 'int64',
+        },
+      }],
+      responses: {
+        "204": {
+          description: "Entity deleted",
+        },
+        "404": {
+          description: "not found"
+        },
+      }
+    };
+
+    if(ep.definition.collectionQueryParams) pathCollectionActionObj.get = {
+      tags: [ path ],
+      summary: `get ${path} entities`,
+      description: `get ${path} entities`,
+      operationId: 'getCollection' + path,
+      parameters: Object.entries(ep.definition.collectionQueryParams).map( ([name, def]) => ({
+        name,
+        in: 'query',
+        description: 'entity query paramterer: ' + name,
+        required: false,
+        schema: {
+          type: 'integer',
+          format: 'int64',
+        },
+      })),
+      responses: {
+        "200": {
+          description: "Successful operation",
+          content: {
+            "application/json": {
+              "schema": {
+                type: 'array',
+                items: {
+                  $ref: getSchemaRef(path, 'getCollection', ep.definition.getResult),
+                }
+              }
+            },
+          }
+        },
+        "400": {
+          description: "invalid request"
+        },
+        "404": {
+          description: "not found"
+        },
+      }
+    };
+
     pathObj['/' + path + '/{id}'] = pathEntityActionObj;
     pathObj['/' + path] = pathCollectionActionObj;
     return pathObj;
