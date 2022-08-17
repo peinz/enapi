@@ -4,7 +4,7 @@ import {
   GetDefinedKeys,
 } from "./util.ts";
 
-type SupportedApiType = "string" | "number";
+export type SupportedApiType = "string" | "number";
 export type SupportedTypeToInternType<Ttype extends SupportedApiType> =
   Ttype extends "string" ? string
     : Ttype extends "number" ? number
@@ -34,32 +34,6 @@ export type RestEndpointDefinition<
   },
 > = { [key in GetDefinedKeys<Tactions>]: Tactions[key] };
 
-export const EndpDef = <
-  TgetResult extends Record<string, SupportedApiType>,
-  TpostBody extends Record<string, SupportedApiType> | undefined,
-  TpatchBody extends Record<string, SupportedApiType> | undefined,
-  TgetCollectionQueryParams extends
-    | Record<string, SupportedApiType>
-    | undefined,
-  Tactions extends {
-    getResult: TgetResult;
-    postBody?: TpostBody;
-    patchBody?: TpatchBody;
-    remove?: boolean;
-    collectionQueryParams?: TgetCollectionQueryParams;
-  },
->(
-  epc: Tactions,
-): RestEndpointDefinition<
-  TgetResult,
-  TpostBody,
-  TpatchBody,
-  TgetCollectionQueryParams,
-  Tactions
-> => {
-  return epc;
-};
-
 export type RestEndpointImplementation<
   Tdefinition extends RestEndpointDefinition<any, any, any, any, any>,
 > = FilterOutNeverProperties<{
@@ -82,13 +56,6 @@ export type RestEndpointImplementation<
     ) => MapSupportedTypeToInternType<Tdefinition["getResult"]>[]
     : never;
 }>;
-
-export const buildEndpoint = <
-  Tdef extends RestEndpointDefinition<any, any, any, any, any>,
->(definition: Tdef) =>
-  <
-    Timp extends RestEndpointImplementation<Tdef>,
-  >(implementation: Timp) => ({ definition, implementation });
 
 export type Endpoint<
   Tdef extends RestEndpointDefinition<any, any, any, any, any>,

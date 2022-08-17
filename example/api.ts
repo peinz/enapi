@@ -1,12 +1,10 @@
-import { core } from "../mod.ts";
-import { RestEndpointImplementation } from "../src/core.ts";
+import {
+  createEndpointDefinition,
+  createEndpointImplementation,
+  Endpoint,
+} from "../mod.ts";
 
-const {
-  buildEndpoint,
-  EndpDef,
-} = core;
-
-const paarung_endpnt_def = EndpDef({
+const paarung_endpnt_def = createEndpointDefinition({
   getResult: {
     id: "number",
     name: "string",
@@ -23,7 +21,7 @@ const paarung_endpnt_def = EndpDef({
   remove: true,
 });
 
-const details_endpnt_def = EndpDef({
+const details_endpnt_def = createEndpointDefinition({
   getResult: {
     name: "string",
   },
@@ -35,32 +33,25 @@ const details_endpnt_def = EndpDef({
 let pc = 0;
 const paarungen = {} as Record<number, { id: number; name: string }>;
 
-const paarung_endpnt_impl: RestEndpointImplementation<
+const paarung_endpnt_impl = createEndpointImplementation<
   typeof paarung_endpnt_def
-> = {
+>({
   get: (id) => paarungen[id],
   post: (body) => paarungen[++pc] = { ...body, id: pc },
   patch: (id, body) => paarungen[id] = { ...paarungen[id], ...body },
   delete: (id) => delete paarungen[id],
   getCollection: (queryParams) => Object.values(paarungen),
-};
+});
 
-const details_endpnt_impl: RestEndpointImplementation<
+const details_endpnt_impl = createEndpointImplementation<
   typeof details_endpnt_def
-> = {
+>({
   get: (id) => ({ id: id, name: "avc" + id }),
   getCollection: (queryParams) => [{ id: 7, name: "avc" + queryParams.season }],
-};
+});
 
-const ep = buildEndpoint(paarung_endpnt_def)(paarung_endpnt_impl);
 export const endpoints = {
-  paarung: ep,
-  abc: {
-    definition: paarung_endpnt_def,
-    implementation: paarung_endpnt_impl,
-  },
-  detail: {
-    definition: details_endpnt_def,
-    implementation: details_endpnt_impl,
-  },
+  paarung: Endpoint(paarung_endpnt_def, paarung_endpnt_impl),
+  abc: Endpoint(paarung_endpnt_def, paarung_endpnt_impl),
+  detail: Endpoint(details_endpnt_def, details_endpnt_impl),
 };
