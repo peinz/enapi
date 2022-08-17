@@ -7,6 +7,11 @@ type FilterOutNeverProperties<Tobj extends Record<string, any>> = {
   [key in GetDefinedKeys<Tobj>]: Tobj[key];
 };
 
+// expands object types recursively
+type ExpandRecursively<T> = T extends object
+  ? T extends infer O ? { [K in keyof O]: ExpandRecursively<O[K]> } : never
+  : T;
+
 type SupportedApiType = "string" | "number";
 type SupportedTypeToInternType<Ttype extends SupportedApiType> = Ttype extends
   "string" ? string
@@ -15,9 +20,11 @@ type SupportedTypeToInternType<Ttype extends SupportedApiType> = Ttype extends
 
 type MapSupportedTypeToInternType<
   TtypeDict extends { [key: string]: SupportedApiType },
-> = {
-  [key in keyof TtypeDict]: SupportedTypeToInternType<TtypeDict[key]>;
-};
+> = ExpandRecursively<
+  {
+    [key in keyof TtypeDict]: SupportedTypeToInternType<TtypeDict[key]>;
+  }
+>;
 
 export type RestEndpointDefinition<
   TgetResult extends Record<string, SupportedApiType>,
