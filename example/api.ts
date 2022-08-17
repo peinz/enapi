@@ -1,8 +1,10 @@
-import {
+import { core } from "../mod.ts";
+import { RestEndpointImplementation } from "../src/core.ts";
+
+const {
   buildEndpoint,
   EndpDef,
-  RestEndpointImplementation,
-} from "./api-lib.ts";
+} = core;
 
 const paarung_endpnt_def = EndpDef({
   getResult: {

@@ -1,4 +1,4 @@
-import { Endpoints } from "./api-lib.ts";
+import { Endpoints } from "./core.ts";
 
 const apiTypeDefToOpenApiTypeDef = (apiTypeDef: Record<string, string>) => {
   const m = Object.entries(apiTypeDef).reduce(

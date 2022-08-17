@@ -1,10 +1,9 @@
 #!/usr/bin/env -S deno run --allow-read --allow-net --watch
 
+import { createOpenApiJsonDoc, RequestHandler } from "../mod.ts";
 import { json, opine } from "https://deno.land/x/opine@2.0.0/mod.ts";
 import { opineCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
 import { endpoints } from "./api.ts";
-import { createOpenApiJsonDoc } from "./open-api-docs.ts";
-import { RequestHandler } from "./api-lib.ts";
 
 const requestHandler = RequestHandler(endpoints);
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env -S deno run --allow-read --allow-net
 
 import { endpoints } from "./api.ts";
-import { ApiClient } from "./api-lib.ts";
+import { Client } from "../mod.ts";
 
-const client = ApiClient(endpoints);
+const client = Client(endpoints);
 
 const posted_data = await client.post.paarung({ name: "dfg" });
 console.log("posted_data", posted_data);
