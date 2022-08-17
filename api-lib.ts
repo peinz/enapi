@@ -101,48 +101,68 @@ export type Endpoint<
 
 export type Endpoints = { [key: string]: Endpoint<any, any> };
 
-type APIClient<Tendpoints extends { [key: string]: Endpoint<any, any> }> = {
-  get: {
-    [route in keyof Tendpoints]: (
-      id: number,
-    ) => Promise<
-      MapSupportedTypeToInternType<Tendpoints[route]["definition"]["getResult"]>
-    >;
-  };
-  post: {
-    [route in keyof Tendpoints]: (
-      body: MapSupportedTypeToInternType<
-        Tendpoints[route]["definition"]["postBody"]
-      >,
-    ) => Promise<
-      MapSupportedTypeToInternType<Tendpoints[route]["definition"]["getResult"]>
-    >;
-  };
-  patch: {
-    [route in keyof Tendpoints]: (
-      id: number,
-      body: MapSupportedTypeToInternType<
-        Tendpoints[route]["definition"]["patchBody"]
-      >,
-    ) => Promise<
-      MapSupportedTypeToInternType<Tendpoints[route]["definition"]["getResult"]>
-    >;
-  };
-  delete: {
-    [route in keyof Tendpoints]: (id: number) => Promise<void>;
-  };
-  getCollection: {
-    [route in keyof Tendpoints]: (
-      params: MapSupportedTypeToInternType<
-        Tendpoints[route]["definition"]["collectionQueryParams"]
-      >,
-    ) => Promise<
-      MapSupportedTypeToInternType<
-        Tendpoints[route]["definition"]["getResult"]
-      >[]
-    >;
-  };
-};
+type FilterEndpointKeys<
+  Tendpoints extends { [key: string]: Endpoint<any, any> },
+  Tby extends "postBody" | "patchBody" | "remove" | "collectionQueryParams",
+> = {
+  [key in keyof Tendpoints]: Tendpoints[key]["definition"][Tby] extends {} ? key
+    : never;
+}[keyof Tendpoints];
+
+type APIClient<Tendpoints extends { [key: string]: Endpoint<any, any> }> =
+  FilterOutNeverProperties<{
+    get: {
+      [route in keyof Tendpoints]: (
+        id: number,
+      ) => Promise<
+        MapSupportedTypeToInternType<
+          Tendpoints[route]["definition"]["getResult"]
+        >
+      >;
+    };
+    post: FilterEndpointKeys<Tendpoints, "postBody"> extends never ? never : {
+      [route in FilterEndpointKeys<Tendpoints, "postBody">]: (
+        body: MapSupportedTypeToInternType<
+          Tendpoints[route]["definition"]["postBody"]
+        >,
+      ) => Promise<
+        MapSupportedTypeToInternType<
+          Tendpoints[route]["definition"]["getResult"]
+        >
+      >;
+    };
+    patch: FilterEndpointKeys<Tendpoints, "patchBody"> extends never ? never : {
+      [route in FilterEndpointKeys<Tendpoints, "patchBody">]: (
+        id: number,
+        body: MapSupportedTypeToInternType<
+          Tendpoints[route]["definition"]["patchBody"]
+        >,
+      ) => Promise<
+        MapSupportedTypeToInternType<
+          Tendpoints[route]["definition"]["getResult"]
+        >
+      >;
+    };
+    delete: FilterEndpointKeys<Tendpoints, "remove"> extends never ? never : {
+      [route in FilterEndpointKeys<Tendpoints, "remove">]: (
+        id: number,
+      ) => Promise<void>;
+    };
+    getCollection:
+      FilterEndpointKeys<Tendpoints, "collectionQueryParams"> extends never
+        ? never
+        : {
+          [route in FilterEndpointKeys<Tendpoints, "collectionQueryParams">]: (
+            params: MapSupportedTypeToInternType<
+              Tendpoints[route]["definition"]["collectionQueryParams"]
+            >,
+          ) => Promise<
+            MapSupportedTypeToInternType<
+              Tendpoints[route]["definition"]["getResult"]
+            >[]
+          >;
+        };
+  }>;
 
 export const ApiClient = <Tendpoints extends Endpoints>(
   endpoints: Tendpoints,

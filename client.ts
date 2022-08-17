@@ -5,7 +5,6 @@ import { ApiClient } from "./api-lib.ts";
 
 const client = ApiClient(endpoints);
 
-// client.post.detail({name: 'abc'}) // FIXME: should not work details/post does not exist
 const posted_data = await client.post.paarung({ name: "dfg" });
 console.log("posted_data", posted_data);
 
