@@ -13,7 +13,10 @@ const apiTypeDefToOpenApiTypeDef = (apiTypeDef: Record<string, string>) => {
   return m;
 };
 
-export const createOpenApiJsonDoc = (endpoints: Endpoints) => {
+export const createOpenApiJsonDoc = (
+  api_base_url: string,
+  endpoints: Endpoints,
+) => {
   const schemas = {} as any;
   const getSchemaRef = (route: string, action: string, propDef: any) => {
     const schema_name = route + "_" + action;
@@ -227,7 +230,7 @@ export const createOpenApiJsonDoc = (endpoints: Endpoints) => {
     openapi: "3.0.3",
     servers: [
       {
-        url: "http://localhost:3000",
+        url: api_base_url,
       },
     ],
     info: {

@@ -3,7 +3,7 @@
 import { endpoints } from "./api.ts";
 import { Client } from "../mod.ts";
 
-const client = Client(endpoints);
+const client = Client("http://localhost:3000", endpoints);
 
 const posted_data = await client.post.foo({ name: "dfg" });
 console.log("posted_data", posted_data);

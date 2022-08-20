@@ -5,6 +5,8 @@ import { json, opine } from "https://deno.land/x/opine@2.0.0/mod.ts";
 import { opineCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
 import { endpoints } from "./api.ts";
 
+const api_base_url = "http://localhost:3000";
+
 const requestHandler = RequestHandler(endpoints);
 
 const server = opine();
@@ -24,11 +26,11 @@ server.use((req, res, next) => {
 });
 
 server.get("/_docs.openapi", (_req, res) => {
-  const doc = createOpenApiJsonDoc(endpoints);
+  const doc = createOpenApiJsonDoc(api_base_url, endpoints);
   res.json(doc);
 });
 
 server.listen(
   3000,
-  () => console.log("server has started on http://localhost:3000 🚀"),
+  () => console.log(`server has started on ${api_base_url} 🚀`),
 );

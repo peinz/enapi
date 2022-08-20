@@ -66,17 +66,16 @@ type Client<Tendpoints extends { [key: string]: Endpoint<any, any> }> =
   }>;
 
 export const Client = <Tendpoints extends Endpoints>(
+  api_base_url: string,
   endpoints: Tendpoints,
 ): Client<Tendpoints> => {
-  const base = "http://localhost:3000";
   const client = {} as Client<any>;
-
   const routes = Object.keys(endpoints);
 
   client.get = routes.reduce((obj, route) => ({
     ...obj,
     [route]: (id: number) =>
-      fetch([base, route, id].join("/"), {
+      fetch([api_base_url, route, id].join("/"), {
         method: "GET",
         mode: "cors",
         cache: "no-cache",
@@ -99,7 +98,7 @@ export const Client = <Tendpoints extends Endpoints>(
   client.post = routes.reduce((obj, route) => ({
     ...obj,
     [route]: (body: Record<string, any>) =>
-      fetch([base, route].join("/"), {
+      fetch([api_base_url, route].join("/"), {
         method: "POST",
         mode: "cors",
         cache: "no-cache",
@@ -122,7 +121,7 @@ export const Client = <Tendpoints extends Endpoints>(
   client.patch = routes.reduce((obj, route) => ({
     ...obj,
     [route]: (id: number, body: Record<string, any>) =>
-      fetch([base, route, id].join("/"), {
+      fetch([api_base_url, route, id].join("/"), {
         method: "PATCH",
         mode: "cors",
         cache: "no-cache",
@@ -145,7 +144,7 @@ export const Client = <Tendpoints extends Endpoints>(
   client.delete = routes.reduce((obj, route) => ({
     ...obj,
     [route]: (id: number) =>
-      fetch([base, route, id].join("/"), {
+      fetch([api_base_url, route, id].join("/"), {
         method: "DELETE",
         mode: "cors",
         cache: "no-cache",
@@ -169,7 +168,7 @@ export const Client = <Tendpoints extends Endpoints>(
   client.getCollection = routes.reduce((obj, route) => ({
     ...obj,
     [route]: (queryParams: Record<string, string>) =>
-      fetch(getUrl([base, route].join("/"), queryParams), {
+      fetch(getUrl([api_base_url, route].join("/"), queryParams), {
         method: "GET",
         mode: "cors",
         cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
