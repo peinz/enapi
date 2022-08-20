@@ -16,7 +16,7 @@ server.use((req, res, next) => {
     method: req.method as any,
     url: req.url.split("?")[0],
     body: req.parsedBody,
-    queryParams: req.params,
+    queryParams: req.query,
   });
 
   if (!result) next();
