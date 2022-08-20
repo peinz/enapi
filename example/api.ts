@@ -4,7 +4,7 @@ import {
   Endpoint,
 } from "../mod.ts";
 
-const paarung_endpnt_def = createEndpointDefinition({
+const foo_endpoint_def = createEndpointDefinition({
   getResult: {
     id: "number",
     name: "string",
@@ -16,42 +16,45 @@ const paarung_endpnt_def = createEndpointDefinition({
     name: "string",
   },
   collectionQueryParams: {
-    season: "number",
+    name: "string",
   },
   remove: true,
 });
 
-const details_endpnt_def = createEndpointDefinition({
+const bar_endpoint_def = createEndpointDefinition({
   getResult: {
     name: "string",
   },
-  collectionQueryParams: {
-    season: "number",
+  collectionQueryParams: {},
+});
+
+let c = 0;
+const foos = {} as Record<number, { id: number; name: string }>;
+
+const foo_endpoint_impl = createEndpointImplementation<
+  typeof foo_endpoint_def
+>({
+  get: (id) => foos[id],
+  post: (body) => foos[++c] = { ...body, id: c },
+  patch: (id, body) => foos[id] = { ...foos[id], ...body },
+  delete: (id) => delete foos[id],
+  getCollection: (queryParams) => {
+    return Object.values(foos).filter((it) =>
+      it.name.startsWith(queryParams.name)
+    );
   },
 });
 
-let pc = 0;
-const paarungen = {} as Record<number, { id: number; name: string }>;
+const bars = {} as Record<number, { id: number; name: string }>;
 
-const paarung_endpnt_impl = createEndpointImplementation<
-  typeof paarung_endpnt_def
+const bar_endpoint_impl = createEndpointImplementation<
+  typeof bar_endpoint_def
 >({
-  get: (id) => paarungen[id],
-  post: (body) => paarungen[++pc] = { ...body, id: pc },
-  patch: (id, body) => paarungen[id] = { ...paarungen[id], ...body },
-  delete: (id) => delete paarungen[id],
-  getCollection: (queryParams) => Object.values(paarungen),
-});
-
-const details_endpnt_impl = createEndpointImplementation<
-  typeof details_endpnt_def
->({
-  get: (id) => ({ id: id, name: "avc" + id }),
-  getCollection: (queryParams) => [{ id: 7, name: "avc" + queryParams.season }],
+  get: (id) => bars[id],
+  getCollection: (_queryParams) => Object.values(bars),
 });
 
 export const endpoints = {
-  paarung: Endpoint(paarung_endpnt_def, paarung_endpnt_impl),
-  abc: Endpoint(paarung_endpnt_def, paarung_endpnt_impl),
-  detail: Endpoint(details_endpnt_def, details_endpnt_impl),
+  foo: Endpoint(foo_endpoint_def, foo_endpoint_impl),
+  bar: Endpoint(bar_endpoint_def, bar_endpoint_impl),
 };

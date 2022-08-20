@@ -5,20 +5,20 @@ import { Client } from "../mod.ts";
 
 const client = Client(endpoints);
 
-const posted_data = await client.post.paarung({ name: "dfg" });
+const posted_data = await client.post.foo({ name: "dfg" });
 console.log("posted_data", posted_data);
 
-const posted_data_2 = await client.post.paarung({ name: "nnn" });
-await client.delete.paarung(posted_data_2.id);
+const posted_data_2 = await client.post.foo({ name: "nnn" });
+await client.delete.foo(posted_data_2.id);
 
-const paarungen = await client.getCollection.paarung({ season: 99 });
+const foos = await client.getCollection.foo({ name: "d" });
 
-console.log("paarungen", paarungen);
+console.log("foos", foos);
 
-const last_detail = paarungen[paarungen.length - 1];
+const last_foo = foos[foos.length - 1];
 
-await client.patch.paarung(last_detail.id, { name: "neu" });
+await client.patch.foo(last_foo.id, { name: "new" });
 
-const last_detail_again = await client.get.paarung(last_detail.id);
+const last_foo_again = await client.get.foo(last_foo.id);
 
-console.log(last_detail_again);
+console.log(last_foo_again);
