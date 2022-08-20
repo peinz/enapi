@@ -1,4 +1,5 @@
 import { Endpoint, Endpoints, MapSupportedTypeToInternType } from "./core.ts";
+import { RequestHandler } from "./RequestHandler.ts";
 import { FilterOutNeverProperties } from "./util.ts";
 
 type FilterEndpointKeys<
@@ -186,6 +187,78 @@ export const Client = <Tendpoints extends Endpoints>(
           return res.json();
         })
         .catch((err) => ({ err })),
+  }), {} as any);
+
+  return client;
+};
+
+const of = (value: any) => new Promise((res) => res(value));
+
+export const LocalTestClient = <Tendpoints extends Endpoints>(
+  endpoints: Tendpoints,
+): Client<Tendpoints> => {
+  const client = {} as Client<any>;
+
+  const routes = Object.keys(endpoints);
+
+  const requestHandler = RequestHandler(endpoints);
+
+  client.get = routes.reduce((obj, route) => ({
+    ...obj,
+    [route]: (id: number) =>
+      of(
+        requestHandler.handle({
+          method: "GET",
+          url: "/" + route + "/" + id,
+        })?.body,
+      ),
+  }), {} as any);
+
+  client.post = routes.reduce((obj, route) => ({
+    ...obj,
+    [route]: (body: Record<string, any>) =>
+      of(
+        requestHandler.handle({
+          method: "POST",
+          url: "/" + route,
+          body,
+        })?.body,
+      ),
+  }), {} as any);
+
+  client.patch = routes.reduce((obj, route) => ({
+    ...obj,
+    [route]: (id: number, body: Record<string, any>) =>
+      of(
+        requestHandler.handle({
+          method: "PATCH",
+          url: "/" + route + "/" + id,
+          body,
+        })?.body,
+      ),
+  }), {} as any);
+
+  client.delete = routes.reduce((obj, route) => ({
+    ...obj,
+    [route]: (id: number) =>
+      of(
+        requestHandler.handle({
+          method: "DELETE",
+          url: "/" + route + "/" + id,
+        })?.body,
+      ),
+  }), {} as any);
+
+  client.getCollection = routes.reduce((obj, route) => ({
+    ...obj,
+    [route]: (queryParams: Record<string, string>) =>
+      of(
+        requestHandler.handle({
+          method: "GET",
+          url: "/" + route,
+          queryParams,
+        })?.body,
+      ),
   }), {} as any);
 
   return client;
