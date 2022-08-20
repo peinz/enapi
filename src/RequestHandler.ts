@@ -14,7 +14,7 @@ export const RequestHandler = <Tendpoints extends Endpoints>(
       method: "GET" | "POST" | "PATCH" | "DELETE";
       url: string;
       body?: Record<string, any>;
-      queryParams: Record<string, string>;
+      queryParams?: Record<string, string>;
     }) => {
       const { method, url, body, queryParams } = request;
       const entity_route_match = (() => {
@@ -75,7 +75,7 @@ export const RequestHandler = <Tendpoints extends Endpoints>(
       if (method === "GET" && collection_route_match) {
         const ep = endpoints[collection_route_match];
         if (!ep.implementation.getCollection) return undefined;
-        const result = ep.implementation.getCollection(queryParams);
+        const result = ep.implementation.getCollection(queryParams ?? {});
         return makeResult(200, result);
       }
     },
