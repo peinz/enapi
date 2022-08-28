@@ -10,7 +10,7 @@ export const RequestHandler = <Tendpoints extends Endpoints>(
   });
 
   return {
-    handle: (request: {
+    handle: async (request: {
       method: "GET" | "POST" | "PATCH" | "DELETE";
       url: string;
       body?: Record<string, any>;
@@ -41,7 +41,8 @@ export const RequestHandler = <Tendpoints extends Endpoints>(
 
       if (method === "GET" && entity_route_match) {
         const ep = endpoints[entity_route_match.route];
-        const result = ep.implementation.get(entity_route_match.id);
+        let result = ep.implementation.get(entity_route_match.id);
+        if (result instanceof Promise) result = await result;
         return result
           ? makeResult(200, result)
           : makeResult(404, { err: "not found" });
@@ -51,7 +52,8 @@ export const RequestHandler = <Tendpoints extends Endpoints>(
         const ep = endpoints[collection_route_match];
         if (!ep.implementation.post) return undefined;
         if (!body) return makeResult(400, { err: "body missing" });
-        const result = ep.implementation.post(body);
+        let result = ep.implementation.post(body);
+        if (result instanceof Promise) result = await result;
         return makeResult(201, result);
       }
 
@@ -59,7 +61,8 @@ export const RequestHandler = <Tendpoints extends Endpoints>(
         const ep = endpoints[entity_route_match.route];
         if (!ep.implementation.patch) return undefined;
         if (!body) return makeResult(400, { err: "body missing" });
-        const result = ep.implementation.patch(entity_route_match.id, body);
+        let result = ep.implementation.patch(entity_route_match.id, body);
+        if (result instanceof Promise) result = await result;
         return result
           ? makeResult(200, result)
           : makeResult(404, { err: "not found" });
@@ -68,14 +71,16 @@ export const RequestHandler = <Tendpoints extends Endpoints>(
       if (method === "DELETE" && entity_route_match) {
         const ep = endpoints[entity_route_match.route];
         if (!ep.implementation.delete) return undefined;
-        ep.implementation.delete(entity_route_match.id);
+        const result = ep.implementation.delete(entity_route_match.id);
+        if (result instanceof Promise) await result;
         return makeResult(204, { status: "success" });
       }
 
       if (method === "GET" && collection_route_match) {
         const ep = endpoints[collection_route_match];
         if (!ep.implementation.getCollection) return undefined;
-        const result = ep.implementation.getCollection(queryParams ?? {});
+        let result = ep.implementation.getCollection(queryParams ?? {});
+        if (result instanceof Promise) result = await result;
         return makeResult(200, result);
       }
     },

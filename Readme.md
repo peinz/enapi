@@ -63,8 +63,8 @@ server.use(opineCors());
 server.use(json());
 
 // handle entity requests
-server.use((req, res, next) => {
-  const result = requestHandler.handle({
+server.use(async (req, res, next) => {
+  const result = await requestHandler.handle({
     method: req.method as any,
     url: req.url.split("?")[0],
     body: req.parsedBody,

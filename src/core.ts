@@ -2,6 +2,7 @@ import {
   ExpandRecursively,
   FilterOutNeverProperties,
   GetDefinedKeys,
+  OrPromise,
 } from "./util.ts";
 
 export type SupportedApiType = "string" | "number";
@@ -37,23 +38,25 @@ export type RestEndpointDefinition<
 export type RestEndpointImplementation<
   Tdefinition extends RestEndpointDefinition<any, any, any, any, any>,
 > = FilterOutNeverProperties<{
-  get: (id: number) => MapSupportedTypeToInternType<Tdefinition["getResult"]>;
+  get: (
+    id: number,
+  ) => OrPromise<MapSupportedTypeToInternType<Tdefinition["getResult"]>>;
   post: "postBody" extends (keyof Tdefinition) ? (
       body: MapSupportedTypeToInternType<Tdefinition["postBody"]>,
-    ) => MapSupportedTypeToInternType<Tdefinition["getResult"]>
+    ) => OrPromise<MapSupportedTypeToInternType<Tdefinition["getResult"]>>
     : never;
   patch: "patchBody" extends (keyof Tdefinition) ? (
       id: number,
       body: MapSupportedTypeToInternType<Tdefinition["patchBody"]>,
-    ) => MapSupportedTypeToInternType<Tdefinition["getResult"]>
+    ) => OrPromise<MapSupportedTypeToInternType<Tdefinition["getResult"]>>
     : never;
-  delete: "remove" extends (keyof Tdefinition) ? (id: number) => void
+  delete: "remove" extends (keyof Tdefinition) ? (id: number) => OrPromise<void>
     : never;
   getCollection: "collectionQueryParams" extends (keyof Tdefinition) ? (
       queryParams: MapSupportedTypeToInternType<
         Tdefinition["collectionQueryParams"]
       >,
-    ) => MapSupportedTypeToInternType<Tdefinition["getResult"]>[]
+    ) => OrPromise<MapSupportedTypeToInternType<Tdefinition["getResult"]>[]>
     : never;
 }>;
 

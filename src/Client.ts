@@ -191,8 +191,6 @@ export const Client = <Tendpoints extends Endpoints>(
   return client;
 };
 
-const of = (value: any) => new Promise((res) => res(value));
-
 export const LocalTestClient = <Tendpoints extends Endpoints>(
   endpoints: Tendpoints,
 ): Client<Tendpoints> => {
@@ -205,59 +203,49 @@ export const LocalTestClient = <Tendpoints extends Endpoints>(
   client.get = routes.reduce((obj, route) => ({
     ...obj,
     [route]: (id: number) =>
-      of(
-        requestHandler.handle({
-          method: "GET",
-          url: "/" + route + "/" + id,
-        })?.body,
-      ),
+      requestHandler.handle({
+        method: "GET",
+        url: "/" + route + "/" + id,
+      }).then((resp) => resp?.body),
   }), {} as any);
 
   client.post = routes.reduce((obj, route) => ({
     ...obj,
     [route]: (body: Record<string, any>) =>
-      of(
-        requestHandler.handle({
-          method: "POST",
-          url: "/" + route,
-          body,
-        })?.body,
-      ),
+      requestHandler.handle({
+        method: "POST",
+        url: "/" + route,
+        body,
+      }).then((resp) => resp?.body),
   }), {} as any);
 
   client.patch = routes.reduce((obj, route) => ({
     ...obj,
     [route]: (id: number, body: Record<string, any>) =>
-      of(
-        requestHandler.handle({
-          method: "PATCH",
-          url: "/" + route + "/" + id,
-          body,
-        })?.body,
-      ),
+      requestHandler.handle({
+        method: "PATCH",
+        url: "/" + route + "/" + id,
+        body,
+      }).then((resp) => resp?.body),
   }), {} as any);
 
   client.delete = routes.reduce((obj, route) => ({
     ...obj,
     [route]: (id: number) =>
-      of(
-        requestHandler.handle({
-          method: "DELETE",
-          url: "/" + route + "/" + id,
-        })?.body,
-      ),
+      requestHandler.handle({
+        method: "DELETE",
+        url: "/" + route + "/" + id,
+      }).then((resp) => resp?.body),
   }), {} as any);
 
   client.getCollection = routes.reduce((obj, route) => ({
     ...obj,
     [route]: (queryParams: Record<string, string>) =>
-      of(
-        requestHandler.handle({
-          method: "GET",
-          url: "/" + route,
-          queryParams,
-        })?.body,
-      ),
+      requestHandler.handle({
+        method: "GET",
+        url: "/" + route,
+        queryParams,
+      }).then((resp) => resp?.body),
   }), {} as any);
 
   return client;

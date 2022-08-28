@@ -25,15 +25,24 @@ Deno.test("test stuff", async () => {
   });
 
   let c = 0;
-  const foos = {} as Record<number, { id: number; name: string }>;
+  type TFoo = { id: number; name: string };
+  const foos = {} as Record<number, TFoo>;
+
+  const getFoo = (id: number) =>
+    new Promise<TFoo>((res) => {
+      const foo = foos[id];
+      res(foo);
+    });
 
   const foo_endpoint_impl = createEndpointImplementation<
     typeof foo_endpoint_def
   >({
-    get: (id) => foos[id],
+    get: (id) => getFoo(id),
     post: (body) => foos[++c] = { ...body, id: c },
     patch: (id, body) => foos[id] = { ...foos[id], ...body },
-    delete: (id) => delete foos[id],
+    delete: (id) => {
+      delete foos[id];
+    },
     getCollection: (queryParams) => {
       return Object.values(foos).filter((it) =>
         it.name.startsWith(queryParams.name)

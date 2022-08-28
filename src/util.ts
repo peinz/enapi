@@ -11,3 +11,6 @@ export type FilterOutNeverProperties<Tobj extends Record<string, any>> = {
 export type ExpandRecursively<T> = T extends object
   ? T extends infer O ? { [K in keyof O]: ExpandRecursively<O[K]> } : never
   : T;
+
+// promise
+export type OrPromise<T> = T | Promise<T>;
