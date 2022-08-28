@@ -2,7 +2,7 @@ import {
   createEndpointDefinition,
   createEndpointImplementation,
   Endpoint,
-} from "../mod.ts";
+} from "https://deno.land/x/enapi/mod.ts";
 
 const foo_endpoint_def = createEndpointDefinition({
   getResult: {

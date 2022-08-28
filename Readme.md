@@ -46,7 +46,10 @@ const foo_endpoint_impl = createEndpointImplementation<
 ### 3. Choose your favorite webserver (enapi is web-server agnostic)
 
 ```typescript
-import { createOpenApiJsonDoc, RequestHandler } from "../mod.ts";
+import {
+  createOpenApiJsonDoc,
+  RequestHandler,
+} from "https://deno.land/x/enapi/mod.ts";
 import { json, opine } from "https://deno.land/x/opine@2.0.0/mod.ts";
 import { opineCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
 import { endpoints } from "./api.ts";
@@ -88,7 +91,7 @@ server.listen(
 
 ```typescript
 import { endpoints } from "./api.ts";
-import { Client } from "https://raw.githubusercontent.com/peinz/enapi/main/mod.ts";
+import { Client } from "https://deno.land/x/enapi/mod.ts";
 
 const client = Client("http://localhost:3000", endpoints);
 

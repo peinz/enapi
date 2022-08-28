@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read --allow-net
 
 import { endpoints } from "./api.ts";
-import { Client } from "../mod.ts";
+import { Client } from "https://deno.land/x/enapi/mod.ts";
 
 const client = Client("http://localhost:3000", endpoints);
 
