@@ -13,4 +13,4 @@ export type ExpandRecursively<T> = T extends object
   : T;
 
 // promise
-export type OrPromise<T> = T | Promise<T>;
+export type MaybePromise<T> = T | Promise<T>;
