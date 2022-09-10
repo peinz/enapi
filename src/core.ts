@@ -40,7 +40,9 @@ export type RestEndpointImplementation<
 > = FilterOutNeverProperties<{
   get: (
     id: number,
-  ) => MaybePromise<MapSupportedTypeToInternType<Tdefinition["getResult"]>>;
+  ) => MaybePromise<
+    MapSupportedTypeToInternType<Tdefinition["getResult"]> | undefined
+  >;
   post: "postBody" extends (keyof Tdefinition) ? (
       body: MapSupportedTypeToInternType<Tdefinition["postBody"]>,
     ) => MaybePromise<MapSupportedTypeToInternType<Tdefinition["getResult"]>>
@@ -48,10 +50,12 @@ export type RestEndpointImplementation<
   patch: "patchBody" extends (keyof Tdefinition) ? (
       id: number,
       body: MapSupportedTypeToInternType<Tdefinition["patchBody"]>,
-    ) => MaybePromise<MapSupportedTypeToInternType<Tdefinition["getResult"]>>
+    ) => MaybePromise<
+      MapSupportedTypeToInternType<Tdefinition["getResult"]> | undefined
+    >
     : never;
   delete: "remove" extends (keyof Tdefinition)
-    ? (id: number) => MaybePromise<void>
+    ? (id: number) => MaybePromise<void | undefined>
     : never;
   getCollection: "collectionQueryParams" extends (keyof Tdefinition) ? (
       queryParams: MapSupportedTypeToInternType<

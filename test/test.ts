@@ -1,10 +1,15 @@
-import { assertEquals } from "https://deno.land/std@0.152.0/testing/asserts.ts";
+import {
+  assert,
+  assertEquals,
+  fail,
+} from "https://deno.land/std@0.152.0/testing/asserts.ts";
 import {
   createEndpointDefinition,
   createEndpointImplementation,
   Endpoint,
 } from "../mod.ts";
 import { LocalTestClient } from "../src/Client.ts";
+import { isError } from "../src/error.ts";
 
 Deno.test("test stuff", async () => {
   const foo_endpoint_def = createEndpointDefinition({
@@ -80,6 +85,14 @@ Deno.test("test stuff", async () => {
 
   const last_foo_again = await client.get.foo(last_foo.id);
 
+  if (isError(last_foo_again)) {
+    fail("query failed");
+  }
+
   assertEquals(last_foo_again.id, 1);
   assertEquals(last_foo_again.name, "new");
+
+  const not_found = await client.get.foo(9999999);
+  console.log(not_found);
+  assert(isError(not_found) && not_found.code === 404);
 });

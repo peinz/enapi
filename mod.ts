@@ -6,6 +6,7 @@ import {
   createEndpointImplementation,
   Endpoint,
 } from "./src/api.ts";
+import { isError } from "./src/error.ts";
 
 export {
   Client,
@@ -13,5 +14,6 @@ export {
   createEndpointImplementation,
   createOpenApiJsonDoc,
   Endpoint,
+  isError,
   RequestHandler,
 };

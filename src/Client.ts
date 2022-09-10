@@ -1,4 +1,5 @@
 import { Endpoint, Endpoints, MapSupportedTypeToInternType } from "./core.ts";
+import { ErrorEntityNotFound } from "./error.ts";
 import { RequestHandler } from "./RequestHandler.ts";
 import { FilterOutNeverProperties } from "./util.ts";
 
@@ -18,7 +19,7 @@ type Client<Tendpoints extends { [key: string]: Endpoint<any, any> }> =
       ) => Promise<
         MapSupportedTypeToInternType<
           Tendpoints[route]["definition"]["getResult"]
-        >
+        > | typeof ErrorEntityNotFound
       >;
     };
     post: FilterEndpointKeys<Tendpoints, "postBody"> extends never ? never : {
@@ -41,13 +42,13 @@ type Client<Tendpoints extends { [key: string]: Endpoint<any, any> }> =
       ) => Promise<
         MapSupportedTypeToInternType<
           Tendpoints[route]["definition"]["getResult"]
-        >
+        > | typeof ErrorEntityNotFound
       >;
     };
     delete: FilterEndpointKeys<Tendpoints, "remove"> extends never ? never : {
       [route in FilterEndpointKeys<Tendpoints, "remove">]: (
         id: number,
-      ) => Promise<void>;
+      ) => Promise<void | typeof ErrorEntityNotFound>;
     };
     getCollection:
       FilterEndpointKeys<Tendpoints, "collectionQueryParams"> extends never
@@ -64,6 +65,22 @@ type Client<Tendpoints extends { [key: string]: Endpoint<any, any> }> =
           >;
         };
   }>;
+
+const formatResponse = (response: Response) => ({
+  statusCode: response.status,
+  body: response.json(),
+});
+
+const handleResponse = (expectedStatusCode: number) =>
+  (resp: { statusCode: number; body: Record<string, any> }) => {
+    if (resp.statusCode === expectedStatusCode) {
+      return resp.body;
+    }
+    if (resp.body.hasOwnProperty("err")) {
+      return { err: resp.body.err, code: resp.statusCode };
+    }
+    throw new Error("problem with: " + JSON.stringify(resp));
+  };
 
 export const Client = <Tendpoints extends Endpoints>(
   api_base_url: string,
@@ -86,12 +103,8 @@ export const Client = <Tendpoints extends Endpoints>(
         redirect: "follow",
         referrerPolicy: "no-referrer",
       })
-        .then((res) => {
-          if (res.status !== 200) {
-            throw { status: res.status, statusText: res.statusText };
-          }
-          return res.json();
-        })
+        .then(formatResponse)
+        .then(handleResponse(200))
         .catch((err) => ({ err })),
   }), {} as any);
 
@@ -109,12 +122,8 @@ export const Client = <Tendpoints extends Endpoints>(
         referrerPolicy: "no-referrer",
         body: JSON.stringify(body),
       })
-        .then((res) => {
-          if (res.status !== 201) {
-            throw { status: res.status, statusText: res.statusText };
-          }
-          return res.json();
-        })
+        .then(formatResponse)
+        .then(handleResponse(201))
         .catch((err) => ({ err })),
   }), {} as any);
 
@@ -132,12 +141,8 @@ export const Client = <Tendpoints extends Endpoints>(
         referrerPolicy: "no-referrer",
         body: JSON.stringify(body),
       })
-        .then((res) => {
-          if (res.status !== 200) {
-            throw { status: res.status, statusText: res.statusText };
-          }
-          return res.json();
-        })
+        .then(formatResponse)
+        .then(handleResponse(200))
         .catch((err) => ({ err })),
   }), {} as any);
 
@@ -151,11 +156,8 @@ export const Client = <Tendpoints extends Endpoints>(
         credentials: "include",
         referrerPolicy: "no-referrer",
       })
-        .then((res) => {
-          if (res.status !== 204) {
-            throw { status: res.status, statusText: res.statusText };
-          }
-        })
+        .then(formatResponse)
+        .then(handleResponse(204))
         .catch((err) => ({ err })),
   }), {} as any);
 
@@ -179,16 +181,25 @@ export const Client = <Tendpoints extends Endpoints>(
         redirect: "follow",
         referrerPolicy: "no-referrer",
       })
-        .then((res) => {
-          if (res.status !== 200) {
-            throw { status: res.status, statusText: res.statusText };
-          }
-          return res.json();
-        })
+        .then(formatResponse)
+        .then(handleResponse(200))
         .catch((err) => ({ err })),
   }), {} as any);
 
   return client;
+};
+
+const fallbackTo = <
+  Tfallback,
+  Tresult extends Texpected | undefined,
+  Texpected extends { statusCode: number; body: Record<string, any> },
+>(fallback: Tfallback) =>
+  (result: Tresult) =>
+    (result !== undefined ? result : fallback) as Texpected | Tfallback;
+
+const ENTITY_NOT_FOUND_RESPONSE = {
+  body: { err: "entity not found" },
+  statusCode: 404,
 };
 
 export const LocalTestClient = <Tendpoints extends Endpoints>(
@@ -206,7 +217,9 @@ export const LocalTestClient = <Tendpoints extends Endpoints>(
       requestHandler.handle({
         method: "GET",
         url: "/" + route + "/" + id,
-      }).then((resp) => resp?.body),
+      })
+        .then(fallbackTo(ENTITY_NOT_FOUND_RESPONSE))
+        .then(handleResponse(200)),
   }), {} as any);
 
   client.post = routes.reduce((obj, route) => ({
@@ -216,7 +229,9 @@ export const LocalTestClient = <Tendpoints extends Endpoints>(
         method: "POST",
         url: "/" + route,
         body,
-      }).then((resp) => resp?.body),
+      })
+        .then(fallbackTo(ENTITY_NOT_FOUND_RESPONSE))
+        .then(handleResponse(201)),
   }), {} as any);
 
   client.patch = routes.reduce((obj, route) => ({
@@ -226,7 +241,9 @@ export const LocalTestClient = <Tendpoints extends Endpoints>(
         method: "PATCH",
         url: "/" + route + "/" + id,
         body,
-      }).then((resp) => resp?.body),
+      })
+        .then(fallbackTo(ENTITY_NOT_FOUND_RESPONSE))
+        .then(handleResponse(200)),
   }), {} as any);
 
   client.delete = routes.reduce((obj, route) => ({
@@ -235,7 +252,9 @@ export const LocalTestClient = <Tendpoints extends Endpoints>(
       requestHandler.handle({
         method: "DELETE",
         url: "/" + route + "/" + id,
-      }).then((resp) => resp?.body),
+      })
+        .then(fallbackTo(ENTITY_NOT_FOUND_RESPONSE))
+        .then(handleResponse(200)),
   }), {} as any);
 
   client.getCollection = routes.reduce((obj, route) => ({
@@ -245,7 +264,12 @@ export const LocalTestClient = <Tendpoints extends Endpoints>(
         method: "GET",
         url: "/" + route,
         queryParams,
-      }).then((resp) => resp?.body),
+      })
+        .then((resp) => {
+          if (resp === undefined) throw new Error("should not be undefined");
+          return resp;
+        })
+        .then(handleResponse(200)),
   }), {} as any);
 
   return client;

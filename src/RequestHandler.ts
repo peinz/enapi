@@ -1,4 +1,5 @@
 import { Endpoints } from "./core.ts";
+import { ErrorEntityNotFound } from "./error.ts";
 
 export const RequestHandler = <Tendpoints extends Endpoints>(
   endpoints: Tendpoints,
@@ -7,6 +8,11 @@ export const RequestHandler = <Tendpoints extends Endpoints>(
   const makeResult = (statusCode: number, body: Record<string, any>) => ({
     statusCode,
     body,
+  });
+
+  const makeError = (error: { err: string; code: number }) => ({
+    statusCode: error.code,
+    body: { err: error.err },
   });
 
   return {
@@ -45,7 +51,7 @@ export const RequestHandler = <Tendpoints extends Endpoints>(
         if (result instanceof Promise) result = await result;
         return result
           ? makeResult(200, result)
-          : makeResult(404, { err: "not found" });
+          : makeError(ErrorEntityNotFound);
       }
 
       if (method === "POST" && collection_route_match) {
@@ -65,7 +71,7 @@ export const RequestHandler = <Tendpoints extends Endpoints>(
         if (result instanceof Promise) result = await result;
         return result
           ? makeResult(200, result)
-          : makeResult(404, { err: "not found" });
+          : makeError(ErrorEntityNotFound);
       }
 
       if (method === "DELETE" && entity_route_match) {
@@ -73,7 +79,9 @@ export const RequestHandler = <Tendpoints extends Endpoints>(
         if (!ep.implementation.delete) return undefined;
         const result = ep.implementation.delete(entity_route_match.id);
         if (result instanceof Promise) await result;
-        return makeResult(204, { status: "success" });
+        return result !== undefined
+          ? makeResult(204, { status: "success" })
+          : makeError(ErrorEntityNotFound);
       }
 
       if (method === "GET" && collection_route_match) {

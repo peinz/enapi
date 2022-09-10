@@ -21,4 +21,8 @@ await client.patch.foo(last_foo.id, { name: "new" });
 
 const last_foo_again = await client.get.foo(last_foo.id);
 
+if (isError(last_foo_again)) {
+  throw new Error("something went wrong");
+}
+
 console.log(last_foo_again);
